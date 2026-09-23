@@ -103,6 +103,24 @@ label {
   white-space: pre-line;
 }
 
+.navigation {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 15px;
+  position: sticky;
+  top: 0;
+  background: #f4f4f4;
+  padding: 8px 0;
+  z-index: 100;
+}
+
+.navigation button {
+  flex: 1;
+  padding: 12px 5px;
+  margin: 0;
+  font-size: 15px;
+}  
+  
 </style>
 
 </head>
@@ -112,8 +130,23 @@ label {
 
 
 <h1>🥫 Kücheninventar</h1>
+<div class="navigation">
 
+  <button onclick="zeigeBereich('scanner')">
+    📷 Scanner
+  </button>
 
+  <button onclick="zeigeBereich('bestand')">
+    📦 Bestand
+  </button>
+
+  <button onclick="zeigeBereich('einkauf')">
+    🛒 Einkauf
+  </button>
+
+</div>
+
+<div id="bereichScanner">  
 <div id="reader"></div>
 
 
@@ -233,7 +266,9 @@ label {
 
 
 <div id="meldung"></div>
-  
+</div>
+
+<div id="bereichBestand" style="display:none;">  
 <div class="box">
 
   <h2>📦 Mein Bestand</h2>
@@ -245,8 +280,9 @@ label {
   <div id="bestandsListe"></div>
 
 </div>
+</div>
 
-
+<div id="bereichEinkauf" style="display:none;">
 <div class="box">
 
   <h2>🛒 Einkaufsliste</h2>
@@ -258,7 +294,7 @@ label {
   <div id="einkaufsListe"></div>
 
 </div>
-
+</div>
 
 <script>
 
@@ -813,6 +849,29 @@ function einkaufslisteLaden() {
     }
   );
 }
+function zeigeBereich(bereich) {
+
+  document.getElementById("bereichScanner")
+    .style.display =
+    bereich === "scanner" ? "block" : "none";
+
+  document.getElementById("bereichBestand")
+    .style.display =
+    bereich === "bestand" ? "block" : "none";
+
+  document.getElementById("bereichEinkauf")
+    .style.display =
+    bereich === "einkauf" ? "block" : "none";
+
+
+  if (bereich === "bestand") {
+    bestandLaden();
+  }
+
+  if (bereich === "einkauf") {
+    einkaufslisteLaden();
+  }
+}  
 const scanner =
   new Html5QrcodeScanner(
 
