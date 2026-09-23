@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>Kücheninventar</title>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 500px;
+      margin: auto;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    #reader {
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+    }
+
+    #produktBox {
+      display: none;
+      background: white;
+      padding: 20px;
+      margin-top: 20px;
+      border-radius: 15px;
+    }
+
+    #produktName {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    #bestand {
+      font-size: 32px;
+      font-weight: bold;
+    }
+
+    button {
+      width: 100%;
+      padding: 17px;
+      margin-top: 10px;
+      font-size: 18px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .plus {
+      background: #d9ead3;
+    }
+
+    .minus {
+      background: #f4cccc;
+    }
+
+    .neu {
+      background: #cfe2f3;
+    }
+
+    #meldung {
+      text-align: center;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🥫 Kücheninventar</h1>
+
+<div id="reader"></div>
+
+<div id="produktBox">
+
+  <div id="produktName"></div>
+
+  <p id="details"></p>
+
+  <p>
+    Bestand:
+    <span id="bestand">0</span>
+  </p>
+
+  <button class="plus" onclick="buchen('plus')">
+    ➕ 1 Einlagern
+  </button>
+
+  <button class="minus" onclick="buchen('minus')">
+    ➖ 1 Entnehmen
+  </button>
+
+</div>
+
+<div id="meldung"></div>
+
+
+<script>
+
+  // HIER DEINE APPS-SCRIPT-URL EINTRAGEN:
+  const API_URL =
+    "https://script.google.com/macros/s/AKfycbyuxJgOWFwuNFlNAHELJvqEg55Y8uHMM99_AQUi5n8QxP5aDCgDbqqURIgwSueDjbgI/exec";
+
+
+  let aktuellerBarcode = "";
+  let letzterScan = "";
+  let letzterScanZeitpunkt = 0;
+
+
+  function barcodeGefunden(decodedText) {
+
+    const jetzt = Date.now();
+
+    // verhindert Mehrfachscans direkt hintereinander
+    if (
+      decodedText === letzterScan &&
+      jetzt - letzterScanZeitpunkt < 3000
+    ) {
+      return;
+    }
+
+    letzterScan = decodedText;
+    letzterScanZeitpunkt = jetzt;
+    aktuellerBarcode = decodedText;
+
+    document.getElementById("meldung").innerText =
+      "Produkt wird gesucht …";
+
+    fetch(
+      API_URL +
+      "?action=produkt&barcode=" +
+      encodeURIComponent(decodedText)
+    )
+    .then(response => response.json())
+    .then(daten => {
+
+      if (daten.gefunden) {
+
+        document.getElementById("produktBox")
+          .style.display = "block";
+
+        document.getElementById("produktName")
+          .innerText = daten.produkt;
+
+        document.getElementById("details")
+          .innerText =
+          (daten.marke || "") +
+          "\n📦 " + (daten.kategorie || "") +
+          "\n📍 " + (daten.standort || "");
+
+        document.getElementById("bestand")
+          .innerText = daten.bestand;
+
+        document.getElementById("meldung")
+          .innerText = "";
+
+      } else {
+
+        document.getElementById("produktBox")
+          .style.display = "none";
+
+        document.getElementById("meldung")
+          .innerText =
+          "❓ Produkt unbekannt\nBarcode: " +
+          decodedText;
+      }
+
+    })
+    .catch(error => {
+
+      document.getElementById("meldung")
+        .innerText =
+        "Fehler bei der Verbindung zum Inventar.";
+
+      console.error(error);
+
+    });
+
+  }
+
+
+  function buchen(typ) {
+
+    if (!aktuellerBarcode) return;
+
+    document.getElementById("meldung")
+      .innerText = "Wird gespeichert …";
+
+    fetch(
+      API_URL +
+      "?action=buchen" +
+      "&barcode=" +
+      encodeURIComponent(aktuellerBarcode) +
+      "&typ=" +
+      encodeURIComponent(typ)
+    )
+    .then(response => response.json())
+    .then(daten => {
+
+      if (daten.erfolg) {
+
+        document.getElementById("bestand")
+          .innerText = daten.bestand;
+
+        if (typ === "plus") {
+          document.getElementById("meldung")
+            .innerText = "✅ Eingelagert";
+        } else {
+          document.getElementById("meldung")
+            .innerText = "✅ Entnommen";
+        }
+
+      } else {
+
+        document.getElementById("meldung")
+          .innerText =
+          "❌ " + (daten.fehler || "Fehler");
+
+      }
+
+    })
+    .catch(error => {
+
+      document.getElementById("meldung")
+        .innerText =
+        "❌ Speichern fehlgeschlagen";
+
+      console.error(error);
+
+    });
+
+  }
+
+
+  const scanner = new Html5QrcodeScanner(
+    "reader",
+    {
+      fps: 10,
+      qrbox: {
+        width: 280,
+        height: 140
+      },
+      rememberLastUsedCamera: true
+    },
+    false
+  );
+
+  scanner.render(barcodeGefunden);
+
+</script>
+
+</body>
+</html>
