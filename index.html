@@ -1,131 +1,282 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
-  <meta charset="UTF-8">
 
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
 
-  <title>Kücheninventar</title>
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
-  <script src="https://unpkg.com/html5-qrcode"></script>
+<title>Kücheninventar</title>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 500px;
-      margin: auto;
-      padding: 20px;
-      background: #f4f4f4;
-    }
+<script src="https://unpkg.com/html5-qrcode"></script>
 
-    h1 {
-      text-align: center;
-    }
+<style>
 
-    #reader {
-      background: white;
-      border-radius: 15px;
-      overflow: hidden;
-    }
+body {
+  font-family: Arial, sans-serif;
+  max-width: 500px;
+  margin: auto;
+  padding: 18px;
+  background: #f4f4f4;
+}
 
-    #produktBox {
-      display: none;
-      background: white;
-      padding: 20px;
-      margin-top: 20px;
-      border-radius: 15px;
-    }
+h1 {
+  text-align: center;
+}
 
-    #produktName {
-      font-size: 24px;
-      font-weight: bold;
-    }
+#reader {
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+}
 
-    #bestand {
-      font-size: 32px;
-      font-weight: bold;
-    }
+.box {
+  background: white;
+  padding: 20px;
+  margin-top: 18px;
+  border-radius: 15px;
+}
 
-    button {
-      width: 100%;
-      padding: 17px;
-      margin-top: 10px;
-      font-size: 18px;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-    }
+#produktBox,
+#neuBox {
+  display: none;
+}
 
-    .plus {
-      background: #d9ead3;
-    }
+#produktName {
+  font-size: 24px;
+  font-weight: bold;
+}
 
-    .minus {
-      background: #f4cccc;
-    }
+.bestand {
+  font-size: 20px;
+}
 
-    #meldung {
-      text-align: center;
-      margin-top: 15px;
-      font-weight: bold;
-      white-space: pre-line;
-    }
-  </style>
+#bestand {
+  font-size: 34px;
+  font-weight: bold;
+}
+
+button {
+  width: 100%;
+  padding: 17px;
+  margin-top: 10px;
+  font-size: 18px;
+  border: none;
+  border-radius: 12px;
+}
+
+.plus {
+  background: #d9ead3;
+}
+
+.minus {
+  background: #f4cccc;
+}
+
+.speichern {
+  background: #cfe2f3;
+}
+
+input,
+select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px;
+  margin-top: 5px;
+  margin-bottom: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 9px;
+  background: white;
+}
+
+label {
+  font-weight: bold;
+}
+
+#meldung {
+  text-align: center;
+  margin-top: 15px;
+  font-weight: bold;
+  white-space: pre-line;
+}
+
+</style>
+
 </head>
+
 
 <body>
 
+
 <h1>🥫 Kücheninventar</h1>
+
 
 <div id="reader"></div>
 
-<div id="produktBox">
+
+<div id="produktBox" class="box">
 
   <div id="produktName"></div>
 
   <p id="details"></p>
 
-  <p>
+  <p class="bestand">
     Bestand:
     <span id="bestand">0</span>
   </p>
 
-  <button class="plus" onclick="buchen('plus')">
+  <button
+    class="plus"
+    onclick="buchen('plus')">
     ➕ 1 Einlagern
   </button>
 
-  <button class="minus" onclick="buchen('minus')">
+  <button
+    class="minus"
+    onclick="buchen('minus')">
     ➖ 1 Entnehmen
   </button>
 
 </div>
 
+
+<div id="neuBox" class="box">
+
+  <h2>Neues Produkt</h2>
+
+  <p>
+    Barcode:
+    <strong id="neuerBarcode"></strong>
+  </p>
+
+
+  <label>Produktname</label>
+
+  <input
+    id="neuProdukt"
+    type="text"
+    placeholder="z. B. Gehackte Tomaten">
+
+
+  <label>Marke</label>
+
+  <input
+    id="neuMarke"
+    type="text"
+    placeholder="optional">
+
+
+  <label>Kategorie</label>
+
+  <select id="neuKategorie">
+
+    <option>Konserven</option>
+    <option>Soßen</option>
+    <option>Gläser</option>
+    <option>Nudeln & Reis</option>
+    <option>Backen</option>
+    <option>Gewürze</option>
+    <option>Getränke</option>
+    <option>Sonstiges</option>
+
+  </select>
+
+
+  <label>Einheit</label>
+
+  <select id="neuEinheit">
+
+    <option>Stück</option>
+    <option>Dose</option>
+    <option>Glas</option>
+    <option>Flasche</option>
+    <option>Packung</option>
+
+  </select>
+
+
+  <label>Standort</label>
+
+  <select id="neuStandort">
+
+    <option>Vorratsschrank</option>
+    <option>Kühlschrank</option>
+    <option>Gefrierschrank</option>
+    <option>Regal</option>
+    <option>Keller</option>
+    <option>Sonstiges</option>
+
+  </select>
+
+
+  <label>Mindestbestand</label>
+
+  <input
+    id="neuMindestbestand"
+    type="number"
+    value="1"
+    min="0">
+
+
+  <button
+    class="speichern"
+    onclick="produktSpeichern()">
+
+    💾 Speichern & +1 einlagern
+
+  </button>
+
+</div>
+
+
 <div id="meldung"></div>
+
 
 
 <script>
 
-  // DEINE APPS-SCRIPT-WEB-APP-URL:
-  const API_URL =
-    "https://script.google.com/macros/s/AKfycbyuxJgOWFwuNFlNAHELJvqEg55Y8uHMM99_AQUi5n8QxP5aDCgDbqqURIgwSueDjbgI/exec";
+
+// ========================================
+// HIER DEINE APPS-SCRIPT-URL EINTRAGEN
+// ========================================
+
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbyuxJgOWFwuNFlNAHELJvqEg55Y8uHMM99_AQUi5n8QxP5aDCgDbqqURIgwSueDjbgI/exec";
 
 
-  let aktuellerBarcode = "";
-  let letzterScan = "";
-  let letzterScanZeitpunkt = 0;
+// ========================================
 
 
-  // ----------------------------
-  // JSONP
-  // ----------------------------
+let aktuellerBarcode = "";
 
-  function jsonp(parameter, callback) {
+let letzterScan = "";
 
-    const callbackName =
-      "jsonpCallback_" + Date.now();
+let letzterScanZeitpunkt = 0;
 
-    window[callbackName] = function(daten) {
+let buchungLaeuft = false;
+
+
+
+// ---------- JSONP ----------
+
+function jsonp(parameter, callback) {
+
+  const callbackName =
+    "cb_" +
+    Date.now() +
+    "_" +
+    Math.floor(Math.random() * 100000);
+
+
+  const script =
+    document.createElement("script");
+
+
+  window[callbackName] =
+    function(daten) {
 
       callback(daten);
 
@@ -135,17 +286,16 @@
     };
 
 
-    const script =
-      document.createElement("script");
+  script.src =
+    API_URL +
+    "?" +
+    parameter +
+    "&callback=" +
+    callbackName;
 
-    script.src =
-      API_URL +
-      "?" +
-      parameter +
-      "&callback=" +
-      callbackName;
 
-    script.onerror = function() {
+  script.onerror =
+    function() {
 
       document.getElementById("meldung")
         .innerText =
@@ -157,175 +307,355 @@
     };
 
 
-    document.body.appendChild(script);
+  document.body.appendChild(script);
+}
+
+
+
+// ---------- SCAN ----------
+
+function barcodeGefunden(decodedText) {
+
+  const jetzt = Date.now();
+
+
+  if (
+    decodedText === letzterScan &&
+    jetzt - letzterScanZeitpunkt < 3000
+  ) {
+    return;
   }
 
 
-  // ----------------------------
-  // BARCODE GEFUNDEN
-  // ----------------------------
+  letzterScan = decodedText;
 
-  function barcodeGefunden(decodedText) {
+  letzterScanZeitpunkt = jetzt;
 
-    const jetzt = Date.now();
-
-    if (
-      decodedText === letzterScan &&
-      jetzt - letzterScanZeitpunkt < 3000
-    ) {
-      return;
-    }
+  aktuellerBarcode = decodedText;
 
 
-    letzterScan = decodedText;
-    letzterScanZeitpunkt = jetzt;
+  document.getElementById("produktBox")
+    .style.display = "none";
 
-    aktuellerBarcode = decodedText;
+  document.getElementById("neuBox")
+    .style.display = "none";
+
+
+  document.getElementById("meldung")
+    .innerText =
+    "🔎 Produkt wird gesucht …";
+
+
+  jsonp(
+
+    "action=produkt&barcode=" +
+    encodeURIComponent(decodedText),
+
+    produktAnzeigen
+
+  );
+
+}
+
+
+
+// ---------- PRODUKT ANZEIGEN ----------
+
+function produktAnzeigen(daten) {
+
+  if (daten.gefunden) {
+
+    document.getElementById("neuBox")
+      .style.display = "none";
+
+
+    document.getElementById("produktBox")
+      .style.display = "block";
+
+
+    document.getElementById("produktName")
+      .innerText =
+      daten.produkt;
+
+
+    document.getElementById("details")
+      .innerText =
+      (daten.marke || "") +
+      "\n📦 " +
+      (daten.kategorie || "") +
+      "\n📍 " +
+      (daten.standort || "");
+
+
+    document.getElementById("bestand")
+      .innerText =
+      daten.bestand;
 
 
     document.getElementById("meldung")
       .innerText =
-      "🔎 Produkt wird gesucht …";
+      "✅ Produkt erkannt";
 
 
-    jsonp(
-      "action=produkt&barcode=" +
-      encodeURIComponent(decodedText),
-
-      function(daten) {
-
-        if (daten.gefunden) {
-
-          document.getElementById("produktBox")
-            .style.display = "block";
+  } else {
 
 
-          document.getElementById("produktName")
-            .innerText =
-            daten.produkt;
+    document.getElementById("produktBox")
+      .style.display = "none";
 
 
-          document.getElementById("details")
-            .innerText =
-            (daten.marke || "") +
-            "\n📦 " +
-            (daten.kategorie || "") +
-            "\n📍 " +
-            (daten.standort || "");
+    document.getElementById("neuBox")
+      .style.display = "block";
 
 
-          document.getElementById("bestand")
-            .innerText =
-            daten.bestand;
+    document.getElementById("neuerBarcode")
+      .innerText =
+      aktuellerBarcode;
 
 
-          document.getElementById("meldung")
-            .innerText =
-            "✅ Produkt erkannt";
-
-        } else {
-
-          document.getElementById("produktBox")
-            .style.display =
-            "none";
+    document.getElementById("neuProdukt")
+      .value = "";
 
 
-          document.getElementById("meldung")
-            .innerText =
-            "❓ Produkt unbekannt\nBarcode: " +
-            decodedText;
-        }
-      }
-    );
-  }
-
-
-  // ----------------------------
-  // EINLAGERN / ENTNEHMEN
-  // ----------------------------
-
-  function buchen(typ) {
-
-    if (!aktuellerBarcode) {
-      return;
-    }
+    document.getElementById("neuMarke")
+      .value = "";
 
 
     document.getElementById("meldung")
       .innerText =
-      "⏳ Wird gespeichert …";
+      "❓ Dieses Produkt kennen wir noch nicht.";
+
+  }
+
+}
 
 
-    jsonp(
-      "action=buchen" +
-      "&barcode=" +
-      encodeURIComponent(aktuellerBarcode) +
-      "&typ=" +
-      encodeURIComponent(typ),
 
-      function(daten) {
+// ---------- BESTAND BUCHEN ----------
 
-        if (daten.erfolg) {
+function buchen(typ) {
 
-          document.getElementById("bestand")
-            .innerText =
-            daten.bestand;
-
-
-          if (typ === "plus") {
-
-            document.getElementById("meldung")
-              .innerText =
-              "✅ 1 eingelagert";
-
-          } else {
-
-            document.getElementById("meldung")
-              .innerText =
-              "✅ 1 entnommen";
-
-          }
-
-        } else {
-
-          document.getElementById("meldung")
-            .innerText =
-            "❌ " +
-            (daten.fehler || "Fehler");
-
-        }
-      }
-    );
+  if (!aktuellerBarcode || buchungLaeuft) {
+    return;
   }
 
 
-  // ----------------------------
-  // SCANNER STARTEN
-  // ----------------------------
+  buchungLaeuft = true;
 
-  const scanner =
-    new Html5QrcodeScanner(
 
-      "reader",
+  document.getElementById("meldung")
+    .innerText =
+    "⏳ Wird gespeichert …";
 
-      {
-        fps: 10,
 
-        qrbox: {
-          width: 280,
-          height: 140
-        },
+  jsonp(
 
-        rememberLastUsedCamera: true
+    "action=buchen" +
+    "&barcode=" +
+    encodeURIComponent(aktuellerBarcode) +
+    "&typ=" +
+    encodeURIComponent(typ),
+
+    function(daten) {
+
+      buchungLaeuft = false;
+
+
+      if (daten.erfolg) {
+
+        document.getElementById("bestand")
+          .innerText =
+          daten.bestand;
+
+
+        document.getElementById("meldung")
+          .innerText =
+          typ === "plus"
+          ? "✅ 1 eingelagert"
+          : "✅ 1 entnommen";
+
+
+      } else {
+
+        document.getElementById("meldung")
+          .innerText =
+          "❌ " +
+          (daten.fehler || "Fehler");
+
+      }
+
+    }
+
+  );
+
+}
+
+
+
+// ---------- NEUES PRODUKT ----------
+
+function produktSpeichern() {
+
+  const produkt =
+    document.getElementById("neuProdukt")
+      .value.trim();
+
+
+  if (!produkt) {
+
+    document.getElementById("meldung")
+      .innerText =
+      "Bitte einen Produktnamen eingeben.";
+
+    return;
+  }
+
+
+  const marke =
+    document.getElementById("neuMarke")
+      .value.trim();
+
+
+  const kategorie =
+    document.getElementById("neuKategorie")
+      .value;
+
+
+  const einheit =
+    document.getElementById("neuEinheit")
+      .value;
+
+
+  const standort =
+    document.getElementById("neuStandort")
+      .value;
+
+
+  const mindestbestand =
+    document.getElementById("neuMindestbestand")
+      .value;
+
+
+  document.getElementById("meldung")
+    .innerText =
+    "⏳ Produkt wird angelegt …";
+
+
+  jsonp(
+
+    "action=anlegen" +
+
+    "&barcode=" +
+    encodeURIComponent(aktuellerBarcode) +
+
+    "&produkt=" +
+    encodeURIComponent(produkt) +
+
+    "&marke=" +
+    encodeURIComponent(marke) +
+
+    "&kategorie=" +
+    encodeURIComponent(kategorie) +
+
+    "&einheit=" +
+    encodeURIComponent(einheit) +
+
+    "&standort=" +
+    encodeURIComponent(standort) +
+
+    "&mindestbestand=" +
+    encodeURIComponent(mindestbestand),
+
+
+    function(daten) {
+
+
+      if (daten.erfolg) {
+
+        document.getElementById("neuBox")
+          .style.display =
+          "none";
+
+
+        document.getElementById("produktBox")
+          .style.display =
+          "block";
+
+
+        document.getElementById("produktName")
+          .innerText =
+          produkt;
+
+
+        document.getElementById("details")
+          .innerText =
+          (marke || "") +
+          "\n📦 " +
+          kategorie +
+          "\n📍 " +
+          standort;
+
+
+        document.getElementById("bestand")
+          .innerText =
+          daten.bestand;
+
+
+        document.getElementById("meldung")
+          .innerText =
+          "✅ Produkt gespeichert und eingelagert";
+
+
+      } else {
+
+
+        document.getElementById("meldung")
+          .innerText =
+          "❌ " +
+          (daten.fehler || "Fehler");
+
+
+      }
+
+    }
+
+  );
+
+}
+
+
+
+// ---------- SCANNER ----------
+
+const scanner =
+  new Html5QrcodeScanner(
+
+    "reader",
+
+    {
+
+      fps: 10,
+
+      qrbox: {
+        width: 280,
+        height: 140
       },
 
-      false
-    );
+      rememberLastUsedCamera: true
+
+    },
+
+    false
+
+  );
 
 
-  scanner.render(barcodeGefunden);
+scanner.render(barcodeGefunden);
+
 
 </script>
 
+
 </body>
+
 </html>
