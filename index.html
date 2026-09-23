@@ -120,6 +120,19 @@ label {
   margin: 0;
   font-size: 15px;
 }  
+
+.bestandsButtons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.bestandsButtons button {
+  flex: 1;
+  margin: 0;
+  padding: 10px;
+  font-size: 20px;
+}
   
 </style>
 
@@ -273,7 +286,11 @@ label {
 
   <h2>📦 Mein Bestand</h2>
 
-  
+  <input
+  id="bestandSuche"
+  type="search"
+  placeholder="🔎 Produkt suchen …"
+  oninput="bestandFiltern()">
 
   <div id="bestandsListe"></div>
 
@@ -313,6 +330,8 @@ let letzterScan = "";
 let letzterScanZeitpunkt = 0;
 
 let buchungLaeuft = false;
+
+let aktuelleBestandsListe = [];
 
 
 
@@ -690,73 +709,154 @@ function bestandLaden() {
   ziel.innerHTML =
     "<p>⏳ Bestand wird geladen …</p>";
 
-
   jsonp(
     "action=bestand",
 
     function(daten) {
 
       if (!daten.erfolg) {
-
         ziel.innerHTML =
           "<p>❌ Bestand konnte nicht geladen werden.</p>";
-
         return;
       }
 
+      aktuelleBestandsListe = daten.produkte;
 
-      if (daten.produkte.length === 0) {
-
-        ziel.innerHTML =
-          "<p>Noch keine Produkte vorhanden.</p>";
-
-        return;
-      }
-
-
-      let html = "";
-
-
-      daten.produkte.forEach(p => {
-
-        html += `
-          <div style="
-            padding:12px 0;
-            border-bottom:1px solid #ddd;
-          ">
-
-            <strong>
-              ${p.produkt}
-            </strong>
-
-            ${p.marke
-              ? "<br><small>" + p.marke + "</small>"
-              : ""
-            }
-
-            <br>
-
-            📦 Bestand:
-            <strong>${p.bestand}</strong>
-            ${p.einheit || ""}
-
-            <br>
-
-            📍 ${p.standort || "–"}
-
-          </div>
-        `;
-
-      });
-
-
-      ziel.innerHTML = html;
-
+      bestandFiltern();
     }
   );
 }
 
 
+function bestandFiltern() {
+
+  const suche =
+    document.getElementById("bestandSuche")
+      .value
+      .toLowerCase()
+      .trim();
+
+  const liste =
+    aktuelleBestandsListe.filter(p => {
+
+      const text =
+        (
+          p.produkt + " " +
+          (p.marke || "") + " " +
+          (p.kategorie || "") + " " +
+          (p.standort || "")
+        ).toLowerCase();
+
+      return text.includes(suche);
+    });
+
+  bestandAnzeigen(liste);
+}
+
+
+function bestandAnzeigen(liste) {
+
+  const ziel =
+    document.getElementById("bestandsListe");
+
+  if (liste.length === 0) {
+    ziel.innerHTML =
+      "<p>Keine passenden Produkte gefunden.</p>";
+    return;
+  }
+
+  let html = "";
+
+  liste.forEach(p => {
+
+    html += `
+      <div style="
+        padding:15px 0;
+        border-bottom:1px solid #ddd;
+      ">
+
+        <strong style="font-size:18px;">
+          ${p.produkt}
+        </strong>
+
+        ${p.marke
+          ? "<br><small>" + p.marke + "</small>"
+          : ""
+        }
+
+        <br>
+
+        <span>
+          📦 Bestand:
+          <strong>${p.bestand}</strong>
+          ${p.einheit || ""}
+        </span>
+
+        <br>
+
+        <small>
+          📍 ${p.standort || "–"}
+          &nbsp; • &nbsp;
+          ${p.kategorie || ""}
+        </small>
+
+        <div class="bestandsButtons">
+
+          <button
+            class="minus"
+            onclick="direktBuchen('${p.barcode}', 'minus')">
+            ➖
+          </button>
+
+          <button
+            class="plus"
+            onclick="direktBuchen('${p.barcode}', 'plus')">
+            ➕
+          </button>
+
+        </div>
+
+      </div>
+    `;
+  });
+
+  ziel.innerHTML = html;
+}
+
+function direktBuchen(barcode, typ) {
+
+  if (buchungLaeuft) {
+    return;
+  }
+
+  buchungLaeuft = true;
+
+  jsonp(
+    "action=buchen" +
+    "&barcode=" +
+    encodeURIComponent(barcode) +
+    "&typ=" +
+    encodeURIComponent(typ),
+
+    function(daten) {
+
+      buchungLaeuft = false;
+
+      if (daten.erfolg) {
+
+        // Bestand danach neu vom Server laden
+        bestandLaden();
+
+      } else {
+
+        alert(
+          daten.fehler ||
+          "Buchung fehlgeschlagen"
+        );
+      }
+    }
+  );
+}
 
 function einkaufslisteLaden() {
 
