@@ -1011,103 +1011,144 @@ function mhdLaden() {
       heute.setHours(0, 0, 0, 0);
 
 
-      let html = "";
+      // Gleiche Produkte mit gleichem MHD zusammenfassen
+const gruppen = {};
+
+daten.mhd.forEach(p => {
+
+  const schluessel =
+    p.barcode + "|" + p.mhd;
+
+  if (!gruppen[schluessel]) {
+
+    gruppen[schluessel] = {
+      ...p,
+      anzahl: 0
+    };
+
+  }
+
+  gruppen[schluessel].anzahl++;
+
+});
 
 
-      daten.mhd.forEach(p => {
-
-        const datum =
-          new Date(
-            p.mhd + "T00:00:00"
-          );
+const gruppierteListe =
+  Object.values(gruppen);
 
 
-        const tage =
-          Math.ceil(
-            (datum - heute) /
-            (1000 * 60 * 60 * 24)
-          );
+// Weiterhin nach frühestem MHD sortieren
+gruppierteListe.sort(
+  (a, b) =>
+    a.mhd.localeCompare(b.mhd)
+);
 
 
-        let symbol;
-        let status;
+let html = "";
 
 
-        if (tage < 0) {
+gruppierteListe.forEach(p => {
 
-          symbol = "🔴";
-          status =
-            Math.abs(tage) +
-            " Tage abgelaufen";
-
-        } else if (tage === 0) {
-
-          symbol = "🔴";
-          status = "läuft heute ab";
-
-        } else if (tage <= 30) {
-
-          symbol = "🟡";
-          status =
-            "noch " +
-            tage +
-            " Tage";
-
-        } else {
-
-          symbol = "🟢";
-          status =
-            "noch " +
-            tage +
-            " Tage";
-
-        }
+  const datum =
+    new Date(
+      p.mhd + "T00:00:00"
+    );
 
 
-        const datumDeutsch =
-          datum.toLocaleDateString(
-            "de-DE"
-          );
+  const tage =
+    Math.ceil(
+      (datum - heute) /
+      (1000 * 60 * 60 * 24)
+    );
 
 
-        html += `
-
-          <div style="
-            padding:15px 0;
-            border-bottom:1px solid #ddd;
-          ">
-
-            <strong style="font-size:18px;">
-              ${symbol}
-              ${p.produkt}
-            </strong>
-
-            ${p.marke
-              ? "<br><small>" +
-                p.marke +
-                "</small>"
-              : ""
-            }
-
-            <br>
-
-            MHD:
-            <strong>
-              ${datumDeutsch}
-            </strong>
-
-            <br>
-
-            ${status}
-
-          </div>
-
-        `;
-
-      });
+  let symbol;
+  let status;
 
 
-      ziel.innerHTML = html;
+  if (tage < 0) {
+
+    symbol = "🔴";
+
+    status =
+      Math.abs(tage) +
+      " Tage abgelaufen";
+
+  } else if (tage === 0) {
+
+    symbol = "🔴";
+    status = "läuft heute ab";
+
+  } else if (tage <= 30) {
+
+    symbol = "🟡";
+
+    status =
+      "noch " +
+      tage +
+      " Tage";
+
+  } else {
+
+    symbol = "🟢";
+
+    status =
+      "noch " +
+      tage +
+      " Tage";
+
+  }
+
+
+  const datumDeutsch =
+    datum.toLocaleDateString(
+      "de-DE"
+    );
+
+
+  html += `
+
+    <div style="
+      padding:15px 0;
+      border-bottom:1px solid #ddd;
+    ">
+
+      <strong style="font-size:18px;">
+        ${symbol}
+        ${p.produkt}
+      </strong>
+
+      ${p.marke
+        ? "<br><small>" +
+          p.marke +
+          "</small>"
+        : ""
+      }
+
+      <br>
+
+      <strong>
+        ${p.anzahl}×
+      </strong>
+
+      · MHD:
+
+      <strong>
+        ${datumDeutsch}
+      </strong>
+
+      <br>
+
+      ${status}
+
+    </div>
+
+  `;
+
+});
+
+
+ziel.innerHTML = html;
 
     }
   );
