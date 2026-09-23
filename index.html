@@ -307,6 +307,62 @@ label {
 </div>
 </div>
 
+<div id="bearbeitenBox" class="box" style="display:none;">
+
+  <h2>✏️ Produkt bearbeiten</h2>
+
+  <input id="editBarcode" type="hidden">
+
+  <label>Produktname</label>
+  <input id="editProdukt" type="text">
+
+  <label>Marke</label>
+  <input id="editMarke" type="text">
+
+  <label>Kategorie</label>
+  <select id="editKategorie">
+    <option>Konserven</option>
+    <option>Soßen</option>
+    <option>Gläser</option>
+    <option>Nudeln & Reis</option>
+    <option>Backen</option>
+    <option>Gewürze</option>
+    <option>Getränke</option>
+    <option>Sonstiges</option>
+  </select>
+
+  <label>Einheit</label>
+  <select id="editEinheit">
+    <option>Stück</option>
+    <option>Dose</option>
+    <option>Glas</option>
+    <option>Flasche</option>
+    <option>Packung</option>
+  </select>
+
+  <label>Standort</label>
+  <select id="editStandort">
+    <option>Vorratsschrank</option>
+    <option>Kühlschrank</option>
+    <option>Gefrierschrank</option>
+    <option>Regal</option>
+    <option>Keller</option>
+    <option>Sonstiges</option>
+  </select>
+
+  <label>Mindestbestand</label>
+  <input id="editMindestbestand" type="number" min="0">
+
+  <button class="speichern" onclick="produktAenderungSpeichern()">
+    💾 Änderungen speichern
+  </button>
+
+  <button onclick="bearbeitenAbbrechen()">
+    Abbrechen
+  </button>
+
+</div>  
+
 <div id="bereichEinkauf" style="display:none;">
 <div class="box">
 
@@ -729,6 +785,121 @@ function produktSpeichern() {
 
 
 // ---------- SCANNER ----------
+function produktBearbeiten(barcode) {
+
+  const p =
+    aktuelleBestandsListe.find(
+      x => x.barcode === barcode
+    );
+
+  if (!p) {
+    return;
+  }
+
+  document.getElementById("bereichBestand")
+    .style.display = "none";
+
+  document.getElementById("bearbeitenBox")
+    .style.display = "block";
+
+
+  document.getElementById("editBarcode")
+    .value = p.barcode;
+
+  document.getElementById("editProdukt")
+    .value = p.produkt || "";
+
+  document.getElementById("editMarke")
+    .value = p.marke || "";
+
+  document.getElementById("editKategorie")
+    .value = p.kategorie || "Sonstiges";
+
+  document.getElementById("editEinheit")
+    .value = p.einheit || "Stück";
+
+  document.getElementById("editStandort")
+    .value = p.standort || "Vorratsschrank";
+
+  document.getElementById("editMindestbestand")
+    .value = p.mindestbestand || 0;
+}
+
+
+function bearbeitenAbbrechen() {
+
+  document.getElementById("bearbeitenBox")
+    .style.display = "none";
+
+  document.getElementById("bereichBestand")
+    .style.display = "block";
+}
+
+
+function produktAenderungSpeichern() {
+
+  const barcode =
+    document.getElementById("editBarcode").value;
+
+  const produkt =
+    document.getElementById("editProdukt")
+      .value.trim();
+
+  if (!produkt) {
+    alert("Bitte Produktname eingeben.");
+    return;
+  }
+
+  const marke =
+    document.getElementById("editMarke").value.trim();
+
+  const kategorie =
+    document.getElementById("editKategorie").value;
+
+  const einheit =
+    document.getElementById("editEinheit").value;
+
+  const standort =
+    document.getElementById("editStandort").value;
+
+  const mindestbestand =
+    document.getElementById("editMindestbestand").value;
+
+
+  jsonp(
+
+    "action=bearbeiten" +
+    "&barcode=" + encodeURIComponent(barcode) +
+    "&produkt=" + encodeURIComponent(produkt) +
+    "&marke=" + encodeURIComponent(marke) +
+    "&kategorie=" + encodeURIComponent(kategorie) +
+    "&einheit=" + encodeURIComponent(einheit) +
+    "&standort=" + encodeURIComponent(standort) +
+    "&mindestbestand=" + encodeURIComponent(mindestbestand),
+
+    function(daten) {
+
+      if (daten.erfolg) {
+
+        document.getElementById("bearbeitenBox")
+          .style.display = "none";
+
+        document.getElementById("bereichBestand")
+          .style.display = "block";
+
+        bestandLaden();
+
+      } else {
+
+        alert(
+          daten.fehler ||
+          "Änderung konnte nicht gespeichert werden."
+        );
+      }
+    }
+  );
+}
+  
 function bestandLaden() {
 
   const ziel =
@@ -840,6 +1011,11 @@ function bestandAnzeigen(liste) {
             class="plus"
             onclick="direktBuchen('${p.barcode}', 'plus')">
             ➕
+          </button>
+
+          <button
+            onclick="produktBearbeiten('${p.barcode}')">
+            ✏️
           </button>
 
         </div>
