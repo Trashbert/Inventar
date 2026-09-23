@@ -785,6 +785,55 @@ function produktSpeichern() {
 
 
 // ---------- SCANNER ----------
+
+function produktLoeschen(barcode, produktname) {
+
+  const sicher =
+    confirm(
+      'Produkt "' +
+      produktname +
+      '" wirklich löschen?\n\n' +
+      'Die bisherigen Buchungen bleiben erhalten.'
+    );
+
+  if (!sicher) {
+    return;
+  }
+
+
+  jsonp(
+
+    "action=loeschen" +
+    "&barcode=" +
+    encodeURIComponent(barcode),
+
+    function(daten) {
+
+      if (daten.erfolg) {
+
+        alert(
+          'Produkt "' +
+          produktname +
+          '" wurde gelöscht.'
+        );
+
+        bestandLaden();
+
+      } else {
+
+        alert(
+          daten.fehler ||
+          "Produkt konnte nicht gelöscht werden."
+        );
+
+      }
+
+    }
+
+  );
+
+}
+  
 function produktBearbeiten(barcode) {
 
   const p =
@@ -1016,6 +1065,11 @@ function bestandAnzeigen(liste) {
           <button
             onclick="produktBearbeiten('${p.barcode}')">
             ✏️
+          </button>
+
+          <button
+            onclick="produktLoeschen('${p.barcode}', '${p.produkt.replace(/'/g, "\\'")}')">
+            🗑️
           </button>
 
         </div>
