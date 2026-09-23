@@ -233,7 +233,31 @@ label {
 
 
 <div id="meldung"></div>
+  
+<div class="box">
 
+  <h2>📦 Mein Bestand</h2>
+
+  <button onclick="bestandLaden()">
+    🔄 Bestand anzeigen
+  </button>
+
+  <div id="bestandsListe"></div>
+
+</div>
+
+
+<div class="box">
+
+  <h2>🛒 Einkaufsliste</h2>
+
+  <button onclick="einkaufslisteLaden()">
+    🔄 Einkaufsliste anzeigen
+  </button>
+
+  <div id="einkaufsListe"></div>
+
+</div>
 
 
 <script>
@@ -626,7 +650,169 @@ function produktSpeichern() {
 
 
 // ---------- SCANNER ----------
+function bestandLaden() {
 
+  const ziel =
+    document.getElementById("bestandsListe");
+
+  ziel.innerHTML =
+    "<p>⏳ Bestand wird geladen …</p>";
+
+
+  jsonp(
+    "action=bestand",
+
+    function(daten) {
+
+      if (!daten.erfolg) {
+
+        ziel.innerHTML =
+          "<p>❌ Bestand konnte nicht geladen werden.</p>";
+
+        return;
+      }
+
+
+      if (daten.produkte.length === 0) {
+
+        ziel.innerHTML =
+          "<p>Noch keine Produkte vorhanden.</p>";
+
+        return;
+      }
+
+
+      let html = "";
+
+
+      daten.produkte.forEach(p => {
+
+        html += `
+          <div style="
+            padding:12px 0;
+            border-bottom:1px solid #ddd;
+          ">
+
+            <strong>
+              ${p.produkt}
+            </strong>
+
+            ${p.marke
+              ? "<br><small>" + p.marke + "</small>"
+              : ""
+            }
+
+            <br>
+
+            📦 Bestand:
+            <strong>${p.bestand}</strong>
+            ${p.einheit || ""}
+
+            <br>
+
+            📍 ${p.standort || "–"}
+
+          </div>
+        `;
+
+      });
+
+
+      ziel.innerHTML = html;
+
+    }
+  );
+}
+
+
+
+function einkaufslisteLaden() {
+
+  const ziel =
+    document.getElementById("einkaufsListe");
+
+  ziel.innerHTML =
+    "<p>⏳ Einkaufsliste wird geladen …</p>";
+
+
+  jsonp(
+    "action=bestand",
+
+    function(daten) {
+
+      if (!daten.erfolg) {
+
+        ziel.innerHTML =
+          "<p>❌ Einkaufsliste konnte nicht geladen werden.</p>";
+
+        return;
+      }
+
+
+      const einkaufen =
+        daten.produkte.filter(
+          p => p.einkaufen
+        );
+
+
+      if (einkaufen.length === 0) {
+
+        ziel.innerHTML =
+          "<p>✅ Aktuell musst du nichts nachkaufen.</p>";
+
+        return;
+      }
+
+
+      let html = "";
+
+
+      einkaufen.forEach(p => {
+
+        const fehlend =
+          Math.max(
+            1,
+            p.mindestbestand - p.bestand + 1
+          );
+
+
+        html += `
+          <div style="
+            padding:12px 0;
+            border-bottom:1px solid #ddd;
+          ">
+
+            <strong>
+              🛒 ${p.produkt}
+            </strong>
+
+            <br>
+
+            Bestand:
+            ${p.bestand}
+
+            <br>
+
+            Mindestbestand:
+            ${p.mindestbestand}
+
+            <br>
+
+            <strong>
+              Empfehlung: ${fehlend} nachkaufen
+            </strong>
+
+          </div>
+        `;
+
+      });
+
+
+      ziel.innerHTML = html;
+
+    }
+  );
+}
 const scanner =
   new Html5QrcodeScanner(
 
