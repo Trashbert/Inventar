@@ -157,6 +157,10 @@ label {
     🛒 Einkauf
   </button>
 
+  <button onclick="zeigeBereich('mhd')">
+  ⏰ MHD
+</button>
+
 </div>
 
 <div id="bereichScanner">  
@@ -314,6 +318,18 @@ label {
 
 </div>
 </div>
+
+<div id="bereichMhd" style="display:none;">
+
+  <div class="box">
+
+    <h2>⏰ Haltbarkeit</h2>
+
+    <div id="mhdListe"></div>
+
+  </div>
+
+</div>  
 
 <script>
 
@@ -957,6 +973,146 @@ function einkaufslisteLaden() {
     }
   );
 }
+
+function mhdLaden() {
+
+  const ziel =
+    document.getElementById("mhdListe");
+
+  ziel.innerHTML =
+    "<p>⏳ MHDs werden geladen …</p>";
+
+
+  jsonp(
+    "action=mhd",
+
+    function(daten) {
+
+      if (!daten.erfolg) {
+
+        ziel.innerHTML =
+          "<p>❌ MHDs konnten nicht geladen werden.</p>";
+
+        return;
+      }
+
+
+      if (daten.mhd.length === 0) {
+
+        ziel.innerHTML =
+          "<p>Keine Produkte mit MHD vorhanden.</p>";
+
+        return;
+      }
+
+
+      const heute = new Date();
+
+      heute.setHours(0, 0, 0, 0);
+
+
+      let html = "";
+
+
+      daten.mhd.forEach(p => {
+
+        const datum =
+          new Date(
+            p.mhd + "T00:00:00"
+          );
+
+
+        const tage =
+          Math.ceil(
+            (datum - heute) /
+            (1000 * 60 * 60 * 24)
+          );
+
+
+        let symbol;
+        let status;
+
+
+        if (tage < 0) {
+
+          symbol = "🔴";
+          status =
+            Math.abs(tage) +
+            " Tage abgelaufen";
+
+        } else if (tage === 0) {
+
+          symbol = "🔴";
+          status = "läuft heute ab";
+
+        } else if (tage <= 30) {
+
+          symbol = "🟡";
+          status =
+            "noch " +
+            tage +
+            " Tage";
+
+        } else {
+
+          symbol = "🟢";
+          status =
+            "noch " +
+            tage +
+            " Tage";
+
+        }
+
+
+        const datumDeutsch =
+          datum.toLocaleDateString(
+            "de-DE"
+          );
+
+
+        html += `
+
+          <div style="
+            padding:15px 0;
+            border-bottom:1px solid #ddd;
+          ">
+
+            <strong style="font-size:18px;">
+              ${symbol}
+              ${p.produkt}
+            </strong>
+
+            ${p.marke
+              ? "<br><small>" +
+                p.marke +
+                "</small>"
+              : ""
+            }
+
+            <br>
+
+            MHD:
+            <strong>
+              ${datumDeutsch}
+            </strong>
+
+            <br>
+
+            ${status}
+
+          </div>
+
+        `;
+
+      });
+
+
+      ziel.innerHTML = html;
+
+    }
+  );
+}
+  
 function zeigeBereich(bereich) {
 
   document.getElementById("bereichScanner")
@@ -971,6 +1127,10 @@ function zeigeBereich(bereich) {
     .style.display =
     bereich === "einkauf" ? "block" : "none";
 
+  document.getElementById("bereichMhd")
+  .style.display =
+  bereich === "mhd" ? "block" : "none";
+
 
   if (bereich === "bestand") {
     bestandLaden();
@@ -978,6 +1138,10 @@ function zeigeBereich(bereich) {
 
   if (bereich === "einkauf") {
     einkaufslisteLaden();
+  }
+
+  if (bereich === "mhd") {
+  mhdLaden();
   }
 }  
 const scanner =
