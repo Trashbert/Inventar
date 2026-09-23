@@ -174,6 +174,12 @@ label {
     <span id="bestand">0</span>
   </p>
 
+  <label for="mhdScan">MHD (optional)</label>
+
+<input
+  id="mhdScan"
+  type="date">
+
   <button
     class="plus"
     onclick="buchen('plus')">
@@ -526,10 +532,16 @@ function buchen(typ) {
   jsonp(
 
     "action=buchen" +
-    "&barcode=" +
-    encodeURIComponent(aktuellerBarcode) +
-    "&typ=" +
-    encodeURIComponent(typ),
+"&barcode=" +
+encodeURIComponent(aktuellerBarcode) +
+"&typ=" +
+encodeURIComponent(typ) +
+"&mhd=" +
+encodeURIComponent(
+  typ === "plus"
+    ? document.getElementById("mhdScan").value
+    : ""
+),
 
     function(daten) {
 
