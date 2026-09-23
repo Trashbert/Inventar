@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
+
   <meta name="viewport"
         content="width=device-width, initial-scale=1.0">
 
@@ -64,14 +65,11 @@
       background: #f4cccc;
     }
 
-    .neu {
-      background: #cfe2f3;
-    }
-
     #meldung {
       text-align: center;
-      margin-top: 12px;
+      margin-top: 15px;
       font-weight: bold;
+      white-space: pre-line;
     }
   </style>
 </head>
@@ -108,7 +106,7 @@
 
 <script>
 
-  // HIER DEINE APPS-SCRIPT-URL EINTRAGEN:
+  // DEINE APPS-SCRIPT-WEB-APP-URL:
   const API_URL =
     "https://script.google.com/macros/s/AKfycbyuxJgOWFwuNFlNAHELJvqEg55Y8uHMM99_AQUi5n8QxP5aDCgDbqqURIgwSueDjbgI/exec";
 
@@ -118,11 +116,59 @@
   let letzterScanZeitpunkt = 0;
 
 
+  // ----------------------------
+  // JSONP
+  // ----------------------------
+
+  function jsonp(parameter, callback) {
+
+    const callbackName =
+      "jsonpCallback_" + Date.now();
+
+    window[callbackName] = function(daten) {
+
+      callback(daten);
+
+      delete window[callbackName];
+
+      script.remove();
+    };
+
+
+    const script =
+      document.createElement("script");
+
+    script.src =
+      API_URL +
+      "?" +
+      parameter +
+      "&callback=" +
+      callbackName;
+
+    script.onerror = function() {
+
+      document.getElementById("meldung")
+        .innerText =
+        "❌ Verbindung zum Inventar fehlgeschlagen.";
+
+      delete window[callbackName];
+
+      script.remove();
+    };
+
+
+    document.body.appendChild(script);
+  }
+
+
+  // ----------------------------
+  // BARCODE GEFUNDEN
+  // ----------------------------
+
   function barcodeGefunden(decodedText) {
 
     const jetzt = Date.now();
 
-    // verhindert Mehrfachscans direkt hintereinander
     if (
       decodedText === letzterScan &&
       jetzt - letzterScanZeitpunkt < 3000
@@ -130,131 +176,152 @@
       return;
     }
 
+
     letzterScan = decodedText;
     letzterScanZeitpunkt = jetzt;
+
     aktuellerBarcode = decodedText;
 
-    document.getElementById("meldung").innerText =
-      "Produkt wird gesucht …";
 
-    fetch(
-      API_URL +
-      "?action=produkt&barcode=" +
-      encodeURIComponent(decodedText)
-    )
-    .then(response => response.json())
-    .then(daten => {
+    document.getElementById("meldung")
+      .innerText =
+      "🔎 Produkt wird gesucht …";
 
-      if (daten.gefunden) {
 
-        document.getElementById("produktBox")
-          .style.display = "block";
+    jsonp(
+      "action=produkt&barcode=" +
+      encodeURIComponent(decodedText),
 
-        document.getElementById("produktName")
-          .innerText = daten.produkt;
+      function(daten) {
 
-        document.getElementById("details")
-          .innerText =
-          (daten.marke || "") +
-          "\n📦 " + (daten.kategorie || "") +
-          "\n📍 " + (daten.standort || "");
+        if (daten.gefunden) {
 
-        document.getElementById("bestand")
-          .innerText = daten.bestand;
+          document.getElementById("produktBox")
+            .style.display = "block";
 
-        document.getElementById("meldung")
-          .innerText = "";
 
-      } else {
+          document.getElementById("produktName")
+            .innerText =
+            daten.produkt;
 
-        document.getElementById("produktBox")
-          .style.display = "none";
 
-        document.getElementById("meldung")
-          .innerText =
-          "❓ Produkt unbekannt\nBarcode: " +
-          decodedText;
+          document.getElementById("details")
+            .innerText =
+            (daten.marke || "") +
+            "\n📦 " +
+            (daten.kategorie || "") +
+            "\n📍 " +
+            (daten.standort || "");
+
+
+          document.getElementById("bestand")
+            .innerText =
+            daten.bestand;
+
+
+          document.getElementById("meldung")
+            .innerText =
+            "✅ Produkt erkannt";
+
+        } else {
+
+          document.getElementById("produktBox")
+            .style.display =
+            "none";
+
+
+          document.getElementById("meldung")
+            .innerText =
+            "❓ Produkt unbekannt\nBarcode: " +
+            decodedText;
+        }
       }
-
-    })
-    .catch(error => {
-
-      document.getElementById("meldung")
-        .innerText =
-        "Fehler bei der Verbindung zum Inventar.";
-
-      console.error(error);
-
-    });
-
+    );
   }
 
+
+  // ----------------------------
+  // EINLAGERN / ENTNEHMEN
+  // ----------------------------
 
   function buchen(typ) {
 
-    if (!aktuellerBarcode) return;
+    if (!aktuellerBarcode) {
+      return;
+    }
+
 
     document.getElementById("meldung")
-      .innerText = "Wird gespeichert …";
+      .innerText =
+      "⏳ Wird gespeichert …";
 
-    fetch(
-      API_URL +
-      "?action=buchen" +
+
+    jsonp(
+      "action=buchen" +
       "&barcode=" +
       encodeURIComponent(aktuellerBarcode) +
       "&typ=" +
-      encodeURIComponent(typ)
-    )
-    .then(response => response.json())
-    .then(daten => {
+      encodeURIComponent(typ),
 
-      if (daten.erfolg) {
+      function(daten) {
 
-        document.getElementById("bestand")
-          .innerText = daten.bestand;
+        if (daten.erfolg) {
 
-        if (typ === "plus") {
-          document.getElementById("meldung")
-            .innerText = "✅ Eingelagert";
+          document.getElementById("bestand")
+            .innerText =
+            daten.bestand;
+
+
+          if (typ === "plus") {
+
+            document.getElementById("meldung")
+              .innerText =
+              "✅ 1 eingelagert";
+
+          } else {
+
+            document.getElementById("meldung")
+              .innerText =
+              "✅ 1 entnommen";
+
+          }
+
         } else {
+
           document.getElementById("meldung")
-            .innerText = "✅ Entnommen";
+            .innerText =
+            "❌ " +
+            (daten.fehler || "Fehler");
+
         }
-
-      } else {
-
-        document.getElementById("meldung")
-          .innerText =
-          "❌ " + (daten.fehler || "Fehler");
-
       }
-
-    })
-    .catch(error => {
-
-      document.getElementById("meldung")
-        .innerText =
-        "❌ Speichern fehlgeschlagen";
-
-      console.error(error);
-
-    });
-
+    );
   }
 
 
-  const scanner = new Html5QrcodeScanner(
-    "reader",
-    {
-      fps: 10,
-      qrbox: {
-        width: 280,
-        height: 140
+  // ----------------------------
+  // SCANNER STARTEN
+  // ----------------------------
+
+  const scanner =
+    new Html5QrcodeScanner(
+
+      "reader",
+
+      {
+        fps: 10,
+
+        qrbox: {
+          width: 280,
+          height: 140
+        },
+
+        rememberLastUsedCamera: true
       },
-      rememberLastUsedCamera: true
-    },
-    false
-  );
+
+      false
+    );
+
 
   scanner.render(barcodeGefunden);
 
